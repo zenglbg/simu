@@ -1,14 +1,13 @@
-import { Controller, Post, Get, Param } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, Session } from '@nestjs/common';
 import { SimuService } from './simu.service';
-
 @Controller('simu')
 export class SimuController {
   constructor(private readonly simuService: SimuService) {}
 
-
-  @Post('option/:id')
-  public option(@Param('id') id: number) {
-    console.log(id)
-    return this.simuService.option(id);
+  @Post('start')
+  public option(
+    @Body() body: { source: any; loop: any; debug: any; ips: any },
+  ) {
+    return this.simuService.start(body);
   }
 }

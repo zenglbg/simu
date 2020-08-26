@@ -1,28 +1,31 @@
 import * as puppeteer from 'puppeteer';
-import { Page, Browser } from 'puppeteer';
+import { Page, Browser, LaunchOptions } from 'puppeteer';
+import * as useProxy from 'puppeteer-page-proxy';
 
 import { rdmMaxRound, rdmMaxFloor } from './random';
 export class MyBrowser {
   //  360浏览器头
   UA = 'User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; 360SE)';
   browser: Browser;
+  page: Page;
 
-  async init(): Promise<void> {
+  async init(option?: LaunchOptions): Promise<void> {
     this.browser = await puppeteer.launch({
       headless: false,
       devtools: true,
+      ...option,
     });
 
     // 创建空白页(新选项卡)
-    const page = await this.browser.newPage();
+    this.page = await this.browser.newPage();
 
     await Promise.all([
       // 设置浏览器头
-      page.setUserAgent(this.UA),
+      this.page.setUserAgent(this.UA),
       // 允许执行js脚本
-      page.setJavaScriptEnabled(true),
+      this.page.setJavaScriptEnabled(true),
       // 页面视口大小
-      page.setViewport({
+      this.page.setViewport({
         width: 1280,
         height: 600,
       }),
@@ -68,6 +71,15 @@ export class MyBrowser {
     const pageList = await this.browser.pages();
     return pageList[pageList.length - 1];
     // 获取新打开的百度页面
+  }
+
+  changeProxy(page: Page) {
+    /**
+     * 切换页面代理
+     */
+    return async function(proxy_url: string) {
+      await useProxy(page, `http://${proxy_url}`);
+    };
   }
 
   async rdmMove(page: Page): Promise<void> {

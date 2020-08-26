@@ -6,8 +6,70 @@
     <title>ejs</title>
   </head>
   <body>
-    这是ejs演示代码
-    <br />
-    <%=message%>
+    <header>模拟功能</header>
+
+    <main id="main-wrapper">
+      <!-- 是否debug -->
+      <div class="input-wrapper">
+        <div class="input-item">
+          <label for="source">目标网址</label>
+          <input type="text" id="source" />
+        </div>
+        <div class="input-item">
+          <label for="loop">百度搜索深度</label>
+          <input type="text" id="loop" />
+        </div>
+        <div class="input-item">
+          <label for="debug">debug</label>
+          <select type="text" id="debug">
+            <option value="0">false</option>
+            <option value="1">true</option>
+          </select>
+        </div>
+        <div class="input-item">
+          <label for="ips">ips</label>
+          <input type="text" id="ips" />
+        </div>
+      </div>
+    </main>
+
+    <footer></footer>
+
+    <script src="https://cdn.bootcdn.net/ajax/libs/rxjs/7.0.0-alpha.0/rxjs.umd.min.js"></script>
+    <script>
+      const { ajax } = rxjs.ajax;
+      function getEl() {
+        const source = document.querySelector('#source').value;
+        const loop = document.querySelector('#loop').value;
+        const debug = document.querySelector('#debug').value;
+        const ips = document.querySelector('#ips').value;
+
+        return {
+          source,
+          loop,
+          debug,
+          ips,
+        };
+      }
+
+      function submit(body) {
+        console.log(body);
+        ajax({
+          url: '/simu/start',
+          method: 'post',
+          headers: {
+            'Content-Type': 'application/json',
+            'rxjs-custom-header': 'Rxjs',
+          },
+          body: body,
+        }).subscribe(console.log);
+      }
+
+      function init() {
+        submit(getEl());
+      }
+
+      init();
+    </script>
   </body>
 </html>

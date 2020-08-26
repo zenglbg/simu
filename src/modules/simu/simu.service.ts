@@ -1,29 +1,31 @@
 import { Injectable } from '@nestjs/common';
-import * as puppeteer from 'puppeteer';
-import { Browser } from 'puppeteer';
 import { MyBrowser } from 'src/common/libs/browser';
+
+import { ConfigService } from '../config/config.service';
 
 @Injectable()
 export class SimuService {
   browser: MyBrowser;
-  constructor() {
+  constructor(public readonly config: ConfigService) {
     this.browser = new MyBrowser();
   }
-
-  public async option(id: number) {
+  async simu() {
     const source = 'philosophy.fudan.edu.cn';
     const maxLoop = 10;
     try {
-      const browser = await puppeteer.launch({
-        headless: false,
-        devtools: true,
-      });
       // const newPage = await this.browser.gotobaidu(browser);
       // 空白页访问指定网址
+      // 代理服务器ip和端口
+      const proxy_url = '14.115.70.168:15737';
+      const proxy_url1 = '222.93.149.9:19688';
 
       // 360出现验证直接使用前往百度
-      const newPage = await browser.newPage();
-      await newPage.goto('https://www.baidu.com', {
+      await this.browser.init({
+        // args: [`--proxy-server=http://${proxy_ip}:${proxy_port}`],
+      });
+      const newPage = await this.browser.page;
+      await this.browser.changeProxy(newPage)(proxy_url);
+      await newPage.goto('http://baidu.com', {
         waitUntil: 'domcontentloaded',
       });
       // 360出现验证直接使用前往百度
@@ -34,7 +36,6 @@ export class SimuService {
       await newPage.focus('#kw');
       // 将文本键入焦点元素
       await newPage.keyboard.type(source, { delay: 100 });
-
       // 回车
       await newPage.keyboard.press('Enter');
 
@@ -127,11 +128,37 @@ export class SimuService {
       //   });
       // }
 
+      console.log(`等待30秒`);
       await newPage.waitFor(30 * 1000);
 
-      await browser.close();
+      await this.browser.browser.close();
     } catch (error) {
       console.log(error, `发生了错误`);
+      this.browser.browser.close();
+    }
+  }
+  public async start(body: {
+    source: any;
+    loop: any;
+    debug: any;
+    ips: any;
+  }): Promise<any> {
+    if (this.config.isStart === 'yes') {
+      return {
+        code: 200,
+        msg: '正在执行中',
+        data: { body },
+      };
+    } else {
+      this.config.isStart = 'yes';
+      setTimeout(() => {
+        this.config.isStart = 'no';
+      }, 3000);
+      return {
+        code: 200,
+        msg: '开始执行模拟',
+        data: { body },
+      };
     }
   }
 }

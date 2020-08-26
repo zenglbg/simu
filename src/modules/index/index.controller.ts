@@ -8,6 +8,6 @@ export class IndexController {
   @Get()
   @Render('index')
   public index(): any {
-    return { message: 'hello world' };
+    return { options: [1, 2, 3, 4] };
   }
 }
