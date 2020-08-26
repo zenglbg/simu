@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import * as dotenv from 'dotenv';
-import * as Joi from 'joi';
-import { ObjectSchema, object } from 'joi';
+import * as Joi from '@hapi/joi';
+import { ObjectSchema, object } from '@hapi/joi';
 
 import * as fs from 'fs';
 
@@ -25,7 +25,7 @@ export class ConfigService {
   private validateInput(envConfig: EnvConfig): EnvConfig {
     console.log(envConfig);
     const envVarsSchema: ObjectSchema = object({
-      IS_START: Joi.string().valid('yes', 'no'),
+      IS_START: Joi.string().valid('false', 'true'),
       NODE_ENV: Joi.string()
         .valid('development', 'production', 'test', 'provision')
         .default('development'),

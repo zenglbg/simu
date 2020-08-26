@@ -143,16 +143,16 @@ export class SimuService {
     debug: any;
     ips: any;
   }): Promise<any> {
-    if (this.config.isStart === 'yes') {
+    if (this.config.isStart == 'true') {
       return {
         code: 200,
         msg: '正在执行中',
         data: { body },
       };
     } else {
-      this.config.isStart = 'yes';
+      this.config.isStart = 'true';
       setTimeout(() => {
-        this.config.isStart = 'no';
+        this.config.isStart = 'false';
       }, 3000);
       return {
         code: 200,
