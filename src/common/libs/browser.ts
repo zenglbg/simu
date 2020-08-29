@@ -78,6 +78,7 @@ export class MyBrowser {
      * 切换页面代理
      */
     return async function(proxy_url: string) {
+      console.log(proxy_url);
       await useProxy(page, `http://${proxy_url}`);
     };
   }

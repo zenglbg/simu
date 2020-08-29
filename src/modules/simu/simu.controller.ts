@@ -5,9 +5,30 @@ export class SimuController {
   constructor(private readonly simuService: SimuService) {}
 
   @Post('start')
-  public option(
+  public start(@Body() body: { source: any; loop: any; debug: any; ips: any }) {
+    return this.simuService.start(body);
+  }
+  @Post('start1')
+  public start1(
     @Body() body: { source: any; loop: any; debug: any; ips: any },
   ) {
-    return this.simuService.start(body);
+    return this.simuService.start1(body);
+  }
+
+  @Post('stop')
+  public stop(@Body('allowed') allowed?: boolean) {
+    return this.simuService.stop(allowed);
+  }
+  @Post('changefalse')
+  public changefalse() {
+    return this.simuService.changefalse();
+  }
+  @Post('changetrue')
+  public changetruep() {
+    return this.simuService.changetrue();
+  }
+  @Post('newsimu')
+  public newsimu() {
+    return this.simuService.newsimu();
   }
 }

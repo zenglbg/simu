@@ -6,7 +6,7 @@ import { ObjectSchema, object } from '@hapi/joi';
 import * as fs from 'fs';
 
 export interface EnvConfig {
-  [key: string]: string;
+  [key: string]: any;
 }
 
 @Injectable()
@@ -23,9 +23,10 @@ export class ConfigService {
    * 包括应用的默认值。
    */
   private validateInput(envConfig: EnvConfig): EnvConfig {
-    console.log(envConfig);
+    console.log(envConfig, `envConfig1111`);
     const envVarsSchema: ObjectSchema = object({
-      IS_START: Joi.string().valid('false', 'true'),
+      IS_START: Joi.boolean().valid(false, true),
+      allowed: Joi.boolean().valid(false, true),
       NODE_ENV: Joi.string()
         .valid('development', 'production', 'test', 'provision')
         .default('development'),
@@ -44,10 +45,17 @@ export class ConfigService {
   get port(): number {
     return Number(this.envConfig.SERVER_PORT);
   }
-  get isStart(): string {
+
+  get isStart(): boolean {
     return this.envConfig.IS_START;
   }
-  set isStart(value: string) {
+  set isStart(value: boolean) {
     this.envConfig.IS_START = value;
+  }
+  get allowed(): boolean {
+    return this.envConfig.allowed;
+  }
+  set allowed(allowed: boolean) {
+    this.envConfig.allowed = allowed;
   }
 }
