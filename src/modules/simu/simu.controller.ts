@@ -5,12 +5,28 @@ export class SimuController {
   constructor(private readonly simuService: SimuService) {}
 
   @Post('start')
-  public start(@Body() body: { source: any; loop: any; debug: any; ips: any }) {
+  public start(
+    @Body()
+    body: {
+      source: any;
+      loop: any;
+      debug: any;
+      ips: any;
+      isJs: boolean;
+    },
+  ) {
     return this.simuService.start(body);
   }
   @Post('start1')
   public start1(
-    @Body() body: { source: any; loop: any; debug: any; ips: any },
+    @Body()
+    body: {
+      source: any;
+      loop: any;
+      debug: any;
+      ips: any;
+      isJs: boolean;
+    },
   ) {
     return this.simuService.start1(body);
   }
@@ -28,7 +44,11 @@ export class SimuController {
     return this.simuService.changetrue();
   }
   @Post('newsimu')
-  public newsimu() {
-    return this.simuService.newsimu();
+  public newsimu(@Body() body) {
+    return this.simuService.newsimu(body);
+  }
+  @Post('newstop')
+  public newstop() {
+    return this.simuService.newstop();
   }
 }

@@ -7,7 +7,7 @@ import { from } from 'rxjs';
 import { Page } from 'puppeteer';
 import { polling } from '../../common/libs/restry';
 import { allow } from '@hapi/joi';
-import { fork } from 'child_process';
+import { fork, ChildProcess } from 'child_process';
 import * as path from 'path';
 interface MockRequestResponse {
   status: string;
@@ -16,6 +16,7 @@ interface MockRequestResponse {
 
 @Injectable()
 export class SimuService {
+  child: ChildProcess = null; // 全局模拟子进程模块
   browser: MyBrowser; //浏览器常用工具
   proxy_url: string; //代理地址
   isFind: boolean; // 是否寻找到目标
@@ -25,10 +26,11 @@ export class SimuService {
     loop: any;
     debug: any;
     ips: any;
+    isJs: boolean;
   };
-  count = 0;
+  count = 0; // 执行进度，0为第一个任务
   isStart = false;
-  allowed = true;
+  allowed = true; // @todo 待删除功能
 
   constructor(
     public readonly config: ConfigService,
@@ -55,7 +57,7 @@ export class SimuService {
     await this.browser.waitS(page, 2000);
   };
 
-  getProxy = (order, num = 1, pt = 1, sep = 1) => (): Observable<any> =>
+  public getProxy = (order, num = 1, pt = 1, sep = 1) => (): Observable<any> =>
     this.httpService
       .get(
         `http://dps.kdlapi.com/api/getdps/?orderid=${order}&num=${num}&pt=${pt}&sep=${sep}`,
@@ -90,7 +92,7 @@ export class SimuService {
     // this.testProxy()
     // 可以删除
 
-    const newPage = await this.browser.gotobaidu(page);
+    const newPage = await this.browser.gotobaidu(page, this.body.isJs);
     // 通过360前往百度返回一个已经在百度的页面
 
     // 360出现验证直接使用前往百度
@@ -247,6 +249,7 @@ export class SimuService {
     loop: any;
     debug: any;
     ips: any;
+    isJs: boolean;
   }): any => {
     this.body = body;
     if (this.isStart == true) {
@@ -312,6 +315,7 @@ export class SimuService {
     loop: any;
     debug: any;
     ips: any;
+    isJs: boolean;
   }): Promise<any> => {
     this.body = body;
     if (this.isStart == true) {
@@ -355,13 +359,75 @@ export class SimuService {
     return this.allowed;
   }
 
-  newsimu() {
-    const child = fork(path.resolve(__dirname, '../../common/libs/simu.js'));
-    child.on('message', msg => {
-      console.log('Message from child', msg);
-    });
+  newstop = () => {
+    if (this.child) {
+      this.child.kill();
+      console.log(`已执行杀死子进程`);
+      return {
+        code: 200,
+        msg: '已执行停止',
+      };
+    } else {
+      return {
+        code: 200,
+        msg: '未有任务在执行',
+      };
+    }
+  };
 
-    child.send({ hello: 'world' });
-    return { code: 200, msg: '执行中' };
-  }
+  newsimu = (body: {
+    source: any;
+    loop: any;
+    debug: any;
+    ips: any;
+    isJs: boolean;
+  }): any => {
+    if (!body.source) {
+      return {
+        code: 201,
+        msg: `没有执行目标`,
+      };
+    }
+    this.body = body;
+    if (this.isStart) {
+      return {
+        code: 200,
+        msg: '执行中',
+        data: {
+          count: this.count,
+        },
+      };
+    } else {
+      console.log(`存储执行状态`);
+      this.isStart = true;
+
+      this.child = fork(path.resolve(__dirname, '../../common/libs/simu.js'));
+      this.child.on('message', msg => {
+        console.log('Message from child', msg);
+        if (this.count > this.body.ips) {
+          this.over();
+        }
+        this.count++;
+      });
+      this.child.send({
+        type: 'start',
+        data: this.body,
+      });
+
+      return {
+        code: 200,
+        msg: '开始执行',
+        data: {
+          count: this.count,
+        },
+      };
+    }
+  };
+
+  over = () => {
+    console.log(`结束子进程`);
+    this.child.kill();
+    this.count = 0;
+    this.isStart = false;
+  };
 }

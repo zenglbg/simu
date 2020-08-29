@@ -3,6 +3,7 @@ import { Page, Browser, LaunchOptions } from 'puppeteer';
 import * as useProxy from 'puppeteer-page-proxy';
 
 import { rdmMaxRound, rdmMaxFloor } from './random';
+import { RequestTimeoutException } from '@nestjs/common';
 export class MyBrowser {
   //  360浏览器头
   UA = 'User-Agent: Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 5.1; 360SE)';
@@ -32,7 +33,7 @@ export class MyBrowser {
     ]);
   }
 
-  async gotobaidu(page: Page): Promise<Page> {
+  async gotobaidu(page: Page, isJs: boolean): Promise<Page> {
     /**
      * 从360搜索并进入百度页面
      */
@@ -69,7 +70,10 @@ export class MyBrowser {
     await page.waitFor(5 * 1000);
     // 获取新打开的百度页面
     const pageList = await this.browser.pages();
-    return pageList[pageList.length - 1];
+    const newPage = pageList[pageList.length - 1];
+    await newPage.setJavaScriptEnabled(isJs);
+
+    return newPage;
     // 获取新打开的百度页面
   }
 
@@ -87,6 +91,9 @@ export class MyBrowser {
     /**
      * 随机移动点击功能
      */
+    console.log(`随机移动点击功能`);
+    await page.waitFor(3 * 1000);
+
     const { width, height } = await page.viewport();
     await (async function moveClick(loopTime) {
       const xy = [rdmMaxRound(width), rdmMaxRound(height)];
@@ -104,16 +111,42 @@ export class MyBrowser {
     /**
      * 随机进入内页功能
      */
+    console.log(`随机进入内页功能,等待5秒渲染时间`);
+    await page.waitFor(5 * 1000);
     console.log(`获取所有内页`);
     const childrenPages = await page.$$(`a[href]`);
     console.log(`随机点击所有内页中的一个`);
     await childrenPages[rdmMaxFloor(childrenPages.length)].click();
   }
 
+  async rdmNewPage(page: Page): Promise<Page> {
+    /**
+     * 随机进入内页功能
+     */
+    console.log(`随机进入内页功能`);
+    await page.waitFor(3 * 1000);
+
+    console.log(`获取所有内页`);
+    const childrenPages = await page.$$(`a[href]`);
+    console.log(`随机点击所有内页中的一个`);
+    const link = await page.evaluate(
+      el => el.getAttribute('href'),
+      childrenPages[rdmMaxFloor(childrenPages.length)],
+    );
+    const newPage = await this.browser.newPage();
+    await newPage.goto(link);
+    console.log(`打开新页面等待5秒的渲染时间`);
+    await this.waitS(newPage, 5);
+    return newPage;
+  }
+
   async backMain(page: Page): Promise<void> {
     /**
      * 返回主页面功能
      */
+    console.log(`返回第一个页面`);
+    await page.waitFor(3 * 1000);
+
     await page.evaluate(() => {
       window.location.href = '/';
     });
@@ -123,10 +156,21 @@ export class MyBrowser {
     /**
      * 返回上级页面
      */
+    console.log(`返回上级页面`);
+    await page.waitFor(3 * 1000);
+
     await page.evaluate(() => {
       window.history.back();
     });
   }
+
+  selectPage = async (lastPage = 0) => {
+    /**
+     * @{params} lastPage: 到处第几个页面
+     */
+    const pageList = await this.browser.pages();
+    return pageList[pageList.length - lastPage - 1];
+  };
 
   async waitS(page: Page, n: number): Promise<void> {
     /**
