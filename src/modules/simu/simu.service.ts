@@ -361,8 +361,8 @@ export class SimuService {
 
   newstop = () => {
     if (this.child) {
-      this.child.kill();
       console.log(`已执行杀死子进程`);
+      this.over();
       return {
         code: 200,
         msg: '已执行停止',

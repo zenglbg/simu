@@ -27,21 +27,35 @@
           </select>
         </div>
         <div class="input-item">
+          <label for="isJs">isJs</label>
+          <select type="text" id="isJs">
+            <option value="0">false</option>
+            <option value="1">true</option>
+          </select>
+        </div>
+        <div class="input-item">
           <label for="ips">ips</label>
           <input type="text" id="ips" />
         </div>
       </div>
+
+      <button class="btn-start">start</button>
+
+      <button class="btn-stop">stop</button>
     </main>
 
     <footer></footer>
 
     <script src="https://cdn.bootcdn.net/ajax/libs/rxjs/7.0.0-alpha.0/rxjs.umd.min.js"></script>
     <script>
+      const { fromEvent } = rxjs;
       const { ajax } = rxjs.ajax;
+      const { switchMap, map, mapTo } = rxjs.operators;
       function getEl() {
         const source = document.querySelector('#source').value;
         const loop = document.querySelector('#loop').value;
         const debug = document.querySelector('#debug').value;
+        const isJs = document.querySelector('#isJs').value;
         const ips = document.querySelector('#ips').value;
 
         return {
@@ -49,27 +63,73 @@
           loop,
           debug,
           ips,
+          isJs,
         };
       }
 
-      function submit(body) {
-        console.log(body);
-        ajax({
-          url: '/simu/start',
-          method: 'post',
-          headers: {
-            'Content-Type': 'application/json',
-            'rxjs-custom-header': 'Rxjs',
-          },
-          body: body,
-        }).subscribe(console.log);
+      function submit() {
+        const btnStart = document.querySelector('.btn-start');
+
+        fromEvent(btnStart, 'click')
+          .pipe(
+            switchMap(event => {
+              const data = getEl();
+              console.log(data);
+              const { source } = data;
+              if (source) {
+                alert(`程序运行目标不能为空`);
+              }
+              return ajax({
+                url: '/simu/newsimu',
+                method: 'post',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'rxjs-custom-header': 'Rxjs',
+                },
+                body: JSON.stringify(data),
+              }).pipe(
+                map(res => {
+                  console.log(res);
+                  return res.response.msg;
+                }),
+              );
+            }),
+          )
+          .subscribe(_ => {
+            alert(_);
+            console.log(_);
+          });
       }
 
-      function init() {
-        submit(getEl());
+      function stop() {
+        const btnStop = document.querySelector('.btn-stop');
+        fromEvent(btnStop, 'click')
+          .pipe(
+            switchMap(e =>
+              ajax({
+                url: '/simu/newstop',
+                method: 'post',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'rxjs-custom-header': 'Rxjs',
+                },
+              }).pipe(
+                map(res => {
+                  console.log(res);
+                  return res.response.msg;
+                }),
+              ),
+            ),
+          )
+          .subscribe(_ => {
+            alert(_);
+            console.log(_);
+          });
       }
-
-      // init();
+      setTimeout(() => {
+        submit();
+        stop();
+      }, 20);
     </script>
   </body>
 </html>
