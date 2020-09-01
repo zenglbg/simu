@@ -17,7 +17,9 @@ export default function myLayout({
         bottom: 0,
       }}
     >
-      <Header>Header</Header>
+      <Header>
+        <h1 style={{ color: "#fff" }}>首页</h1>
+      </Header>
       <Content style={{ overflow: "scroll" }}>{children}</Content>
     </Layout>
   );

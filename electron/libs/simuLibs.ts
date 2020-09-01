@@ -1,10 +1,9 @@
 import { MyBrowser } from "./browser";
-import { map, switchMap, catchError } from "rxjs/operators";
-import { Observable } from "rxjs";
-import { from } from "rxjs";
 import { Page } from "puppeteer";
 import axios from "axios";
 import * as path from "path";
+import { arrRange } from "./array";
+
 process.on("message", (value) => {
   console.log("Message from parent:", value);
 
@@ -39,11 +38,29 @@ export class SimuLibs {
     this.init();
   }
 
-  init() {
-    console.log(`我初始化了`);
-    // this.timer();
-    console.log(`获取代理`);
-    this.getProxy(this.body.order);
+  async init() {
+    try {
+      console.log(`我初始化了`);
+      // this.timer();
+      console.log(`获取代理`);
+
+      console.log(`监听停止事件`);
+
+      process.on("message", (value) => {
+        console.log("Message from parent:", value);
+
+        // new Simu();
+        if (value.type == "stop") {
+          this.counter = this.body.ips;
+          this.getError();
+        }
+      });
+
+      this.getProxy(this.body.order);
+    } catch (error) {
+      console.log(error, `libs 的init 发生了错误`);
+    }
+
     // this.start();
   }
 
@@ -63,7 +80,7 @@ export class SimuLibs {
       // 回车
       await page.keyboard.press("Enter");
       // # 等待指定时间 ，second
-      await this.browser.waitS(page, 2000);
+      await this.browser.waitS(page, 5);
     } else {
       throw new Error(`发生了错误在测试代理函数`);
     }
@@ -73,13 +90,18 @@ export class SimuLibs {
     await this.browser.browser.close();
 
     process.send({ counter: this.counter++ });
-    this.start();
+    if (this.counter < this.body.ips) {
+      this.start();
+    }
   }
 
-  public getProxy = (order: string, num = 1, pt = 1, sep = 1) => (): Promise<
-    any
-  > =>
-    axios
+  public getProxy = (order: string, num = 1, pt = 1, sep = 1) => {
+    console.log(
+      "获取代理",
+      111,
+      `http://dps.kdlapi.com/api/getdps/?orderid=${order}&num=${num}&pt=${pt}&sep=${sep}`
+    );
+    return axios
       .get(
         `http://dps.kdlapi.com/api/getdps/?orderid=${order}&num=${num}&pt=${pt}&sep=${sep}`
       )
@@ -96,6 +118,7 @@ export class SimuLibs {
           this.getError();
         }
       );
+  };
 
   public async start() {
     try {
@@ -109,15 +132,15 @@ export class SimuLibs {
         args: [this.proxy_url ? `--proxy-server=http://${this.proxy_url}` : ""],
       });
       const page = await this.browser.page;
+      // 可以删除
+      await this.testProxy(page);
+      // 可以删除
       console.log(`删除cookie`);
       await page.deleteCookie();
       // await this.browser.changeProxy(page)(this.proxy_url);
       // # 等待指定时间 ，second
       await this.browser.waitS(page, 2);
 
-      // 可以删除
-      // this.testProxy()
-      // 可以删除
       // 通过360前往百度返回一个已经在百度的页面
       const newPage = await this.browser.gotobaidu(page, this.body.isJs);
       console.log(`删除cookie`);
@@ -126,9 +149,10 @@ export class SimuLibs {
 
       // 360出现验证直接使用前往百度
       // const newPage = await this.browser.page;
-      // this.proxy_url && (await this.browser.changeProxy(newPage)(this.proxy_url));
-      // await newPage.goto('http://baidu.com', {
-      //   waitUntil: 'domcontentloaded',
+      // this.proxy_url &&
+      //   (await this.browser.changeProxy(newPage)(this.proxy_url));
+      // await newPage.goto("http://baidu.com", {
+      //   waitUntil: "domcontentloaded",
       // });
       // 360出现验证直接使用前往百度
 
@@ -179,14 +203,16 @@ export class SimuLibs {
       await newPage.waitForSelector(".c-showurl");
       // 等待两秒
       await newPage.waitFor(5 * 1000);
+      console.log(`循环遍历百度结果寻找目标title`);
       await this.makeLoop(newPage, loop);
-
       console.log(`循环结束`);
 
       console.log(`等待3秒`);
       await newPage.waitFor(3 * 1000);
       console.log(`开始执行模拟`);
-      await this.simu(newPage);
+      await this.simu(await this.browser.getLastPage(this.body.isJs));
+      console.log(`执行模拟等待一段事件`);
+      await newPage.waitFor(5 * 1000);
 
       /**
        * @todo 模拟操作目标页面
@@ -195,14 +221,17 @@ export class SimuLibs {
       await this.browser.browser.close();
 
       process.send({ counter: this.counter++ });
-      this.start();
+      console.log(`继续执行下一个模拟`);
+      if (this.counter < this.body.ips) {
+        this.start();
+      }
     } catch (error) {
       console.log(error);
       this.getError();
     }
   }
 
-  public makeLoop = async (newPage: Page, loop: number) => {
+  public makeLoop1 = async (newPage: Page, loop: number) => {
     const { source } = this.body;
     console.log(`第${loop}次循环`);
     console.log(`选取输入框`);
@@ -245,11 +274,72 @@ export class SimuLibs {
     } else {
       console.log("当前百度页没有目标网址，点击下一页");
       await newPage.click(".page-inner>a:last-child");
-      loop > 0 && (await this.makeLoop(newPage, loop - 1));
+      loop > 0 && (await this.makeLoop1(newPage, loop - 1));
+    }
+  };
+
+  public makeLoop = async (newPage: Page, loop: number) => {
+    for await (const loopItem of arrRange(loop)) {
+      const { source } = this.body;
+      console.log(`第${loopItem}次循环`);
+      console.log(`选取输入框`);
+      const input = await newPage.$("#kw");
+      console.log(`单击输入框三次`);
+      await input.click({ clickCount: 3 });
+      console.log(`输入目标搜索文字`);
+      await input.type(this.resultTitle, {
+        delay: 100,
+      });
+      // 回车
+      await newPage.keyboard.press("Enter");
+      console.log("等待百度搜索结果渲染");
+      await newPage.waitForSelector(".c-showurl");
+      // 等待两秒
+      await newPage.waitFor(5 * 1000);
+      console.log("获取所有百度结果");
+      const text = await newPage.$eval(
+        "#content_left",
+        (node) => node.innerHTML
+      );
+      console.log("是否寻找到目标网址", new RegExp(source, "g").test(text));
+      this.isFind = new RegExp(source, "g").test(text);
+      // 等待两秒
+      await newPage.waitFor(2 * 1000);
+      if (this.isFind) {
+        const sourceHashLink = await newPage.evaluate((source) => {
+          const resultKey = Array.from(
+            document.querySelectorAll(".c-showurl")
+          ).reduce((acc: string, item: HTMLElement) => {
+            console.log(item, item.innerText);
+            return new RegExp(source, "g").test(item.innerText)
+              ? item.getAttribute("href")
+              : acc;
+          }, null);
+          console.log(`目标网站百度生成的hash值链接2`, resultKey);
+          return resultKey;
+        }, source);
+        console.log("等待百度搜索结果渲染");
+        await newPage.waitForSelector(".c-showurl");
+        console.log(`点击前往目标页面：：：：${sourceHashLink}`);
+        await newPage.click(`a[href="${sourceHashLink}"]`);
+      } else {
+        console.log(`开始滚动到百度页面底部`);
+        await this.browser.autoScroll(newPage);
+        console.log(`等待一段事件`);
+        await newPage.waitFor(3 * 1000);
+        console.log("当前百度页没有目标网址，点击下一页");
+        await newPage.click(".page-inner>a:last-child");
+      }
     }
   };
 
   simu = async (page: Page): Promise<any> => {
+    console.log(`监听页面弹出`);
+    page.on("dialog", async (dialog) => {
+      console.log(`打印出弹框的信息`, dialog.message());
+      await page.waitFor(2000); //特意加两秒等可以看到弹框出现后取消
+      await dialog.dismiss();
+    });
     switch (this.counter) {
       case 0:
         await this.browser.rdmMove(page);

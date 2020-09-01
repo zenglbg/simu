@@ -23,8 +23,10 @@
     "typescript": "3.9.7"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "oldstart": "react-scripts start",
+    "oldbuild": "react-scripts build",
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
     "test": "react-scripts test",
     "postinstall": "electron-builder install-app-deps",
     "electron:dev": "concurrently \"BROWSER=none yarn start\" \"wait-on http://localhost:3000 && tsc -p electron -w\" \"wait-on http://localhost:3000 && tsc -p electron && electron .\"",
@@ -66,6 +68,7 @@
     "concurrently": "^5.3.0",
     "electron": "^9.2.0",
     "electron-builder": "^22.8.0",
+    "react-app-rewired": "^2.1.6",
     "wait-on": "^5.2.0"
   }
 }

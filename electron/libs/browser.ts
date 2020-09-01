@@ -1,7 +1,7 @@
 import * as puppeteer from "puppeteer";
 import { Page, Browser, LaunchOptions } from "puppeteer";
 import * as useProxy from "puppeteer-page-proxy";
-
+import { arrRange } from "./array";
 import { rdmMaxRound, rdmMaxFloor } from "./random";
 export class MyBrowser {
   //  360浏览器头
@@ -68,12 +68,17 @@ export class MyBrowser {
     // 等待五秒
     await page.waitFor(5 * 1000);
     // 获取新打开的百度页面
+
+    return await this.getLastPage(isJs);
+    // 获取新打开的百度页面
+  }
+
+  public async getLastPage(isJs: boolean) {
     const pageList = await this.browser.pages();
     const newPage = pageList[pageList.length - 1];
     await newPage.setJavaScriptEnabled(isJs);
 
     return newPage;
-    // 获取新打开的百度页面
   }
 
   changeProxy(page: Page) {
@@ -86,6 +91,27 @@ export class MyBrowser {
     };
   }
 
+  async autoScroll(page) {
+    /**
+     * 自动滚动到底部
+     */
+    await page.evaluate(async () => {
+      await new Promise((resolve, reject) => {
+        var totalHeight = 0;
+        var distance = 100;
+        var timer = setInterval(() => {
+          var scrollHeight = document.body.scrollHeight;
+          window.scrollBy(0, distance);
+          totalHeight += distance;
+          if (totalHeight >= scrollHeight) {
+            clearInterval(timer);
+            resolve();
+          }
+        }, 100);
+      });
+    });
+  }
+
   async rdmMove(page: Page): Promise<void> {
     /**
      * 随机移动点击功能
@@ -94,16 +120,23 @@ export class MyBrowser {
     await page.waitFor(3 * 1000);
 
     const { width, height } = await page.viewport();
-    await (async function moveClick(loopTime) {
-      const xy = [rdmMaxRound(width), rdmMaxRound(height)];
-      await page.mouse.move.apply(null, xy);
-      console.log(`获取所有非超链接`);
-      const childrenPages = await page.$$(`body>div>div`);
-      console.log(`随机点击所有内页中的一个`);
-      await childrenPages[rdmMaxFloor(childrenPages.length)].click();
+    // await (async function moveClick(loopTime) {
+    for await (const loopTime of arrRange(10)) {
+      console.log(`第${loopTime} 随机移动点击`);
       await page.waitFor(2 * 1000);
-      loopTime > 0 && moveClick(loopTime - 1);
-    })(10);
+
+      console.log(`获取xy随机值`);
+      const [x, y] = [rdmMaxRound(width), rdmMaxRound(height)];
+      console.log(`移动鼠标`, x, y);
+      await page.mouse.move(x, y);
+      console.log(`等待2秒`);
+      await page.waitFor(2 * 1000);
+      console.log(`随机点击页面`);
+      await page.mouse.click(x, y);
+      await page.waitFor(2 * 1000);
+    }
+
+    // })(10);
   }
 
   async rdmPage(page: Page): Promise<void> {
@@ -127,7 +160,7 @@ export class MyBrowser {
 
     console.log(`获取所有内页`);
     const childrenPages = await page.$$(`a[href]`);
-    console.log(`随机点击所有内页中的一个`);
+    console.log(`随机点击所有内页中的一个`, childrenPages);
     const link = await page.evaluate(
       (el) => el.getAttribute("href"),
       childrenPages[rdmMaxFloor(childrenPages.length)]

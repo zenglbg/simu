@@ -5,7 +5,7 @@ import installExtension, {
   REACT_DEVELOPER_TOOLS,
 } from "electron-devtools-installer";
 import * as windowStateKeeper from "electron-window-state";
-import { Simu } from "./modules/simu";
+import { SimuService } from "./modules/simu.service";
 
 let win: BrowserWindow | null = null;
 
@@ -59,7 +59,7 @@ function createWindow() {
     win.webContents.openDevTools();
   }
 
-  new Simu();
+  new SimuService();
 
   mainWindowState.manage(win);
 }

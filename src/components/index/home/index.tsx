@@ -18,8 +18,8 @@ interface DataInter {
 export const HomePage = (props: Props) => {
   const [isJs, setIsJs] = useState(true);
   const [debug, setDebug] = useState(true);
-  const [source, setSource] = useState("");
-  const [order, setOrder] = useState("");
+  const [source, setSource] = useState("www.cn-hdfh.com/");
+  const [order, setOrder] = useState("909894887329961");
   const [loop, setLoop] = useState(10);
   const [ips, setIps] = useState(3);
 
@@ -47,11 +47,11 @@ export const HomePage = (props: Props) => {
     ipc.send("stop-simu");
   };
 
-  const onFinish = (values: any) => {
-    console.log("Success:", values);
-    const data = { isJs, debug, source, order, loop, ips };
+  const onFinish = (values: DataInter) => {
+    console.log("Failed:", values);
+
     if (source) {
-      ipc.send("start-simu", data);
+      ipc.send("start-simu", values);
     } else {
       message.error("目标网址不能为空！");
     }
@@ -68,6 +68,7 @@ export const HomePage = (props: Props) => {
         }}
         layout="horizontal"
         onFinish={onFinish}
+        initialValues={{ isJs, debug, source, order, loop, ips }}
         onFinishFailed={onFinishFailed}
       >
         <Form.Item
@@ -77,7 +78,9 @@ export const HomePage = (props: Props) => {
         >
           <Input
             style={{ width: 280 }}
+            defaultValue={source}
             value={source}
+            placeholder="请输入百度快照显示网址"
             onChange={(e) => setSource(e.target.value)}
           />
         </Form.Item>
@@ -89,7 +92,9 @@ export const HomePage = (props: Props) => {
         >
           <Input
             style={{ width: 280 }}
+            defaultValue={order}
             value={order}
+            placeholder="请输入代理订单编号--目前使用快代理"
             onChange={(e) => setOrder(e.target.value)}
           />
         </Form.Item>
@@ -104,6 +109,7 @@ export const HomePage = (props: Props) => {
             max={100000}
             defaultValue={loop}
             value={loop}
+            placeholder="请输入数字，对百度搜索结果翻页查找的最大翻页数"
             onChange={(value) => setLoop(Number(value))}
           />
         </Form.Item>
@@ -123,14 +129,22 @@ export const HomePage = (props: Props) => {
         </Form.Item>
 
         <Form.Item label="debug" name="debug">
-          <Radio.Group onChange={(e) => setDebug(e.target.value)} value={debug}>
+          <Radio.Group
+            defaultValue={debug}
+            onChange={(e) => setDebug(e.target.value)}
+            value={debug}
+          >
             <Radio value={false}>false</Radio>
             <Radio value={true}>true</Radio>
           </Radio.Group>
         </Form.Item>
 
         <Form.Item label="js" name="isJs">
-          <Radio.Group onChange={(e) => setIsJs(e.target.value)} value={isJs}>
+          <Radio.Group
+            defaultValue={isJs}
+            onChange={(e) => setIsJs(e.target.value)}
+            value={isJs}
+          >
             <Radio value={false}>false</Radio>
             <Radio value={true}>true</Radio>
           </Radio.Group>
@@ -138,14 +152,14 @@ export const HomePage = (props: Props) => {
 
         <Form.Item>
           <Button htmlType="submit" className="btn-start" type="primary">
-            搜索
+            开始执行
           </Button>
           <Button
             onClick={handleStop}
             className="btn-stop"
             style={{ marginLeft: 8 }}
           >
-            重置
+            停止执行
           </Button>
         </Form.Item>
       </Form>

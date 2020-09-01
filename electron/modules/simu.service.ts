@@ -1,7 +1,4 @@
 import { MyBrowser } from "../libs/browser";
-import { map, switchMap, catchError } from "rxjs/operators";
-import { Observable, from } from "rxjs";
-import { Page } from "puppeteer";
 import { fork, ChildProcess } from "child_process";
 import { ipcMain } from "electron";
 import * as path from "path";
@@ -15,7 +12,7 @@ interface InfoBody {
   isJs: boolean;
 }
 
-export class Simu {
+export class SimuService {
   child: ChildProcess = null; // 全局模拟子进程模块
   browser: MyBrowser; //浏览器常用工具
   proxy_url: string; //代理地址
@@ -79,7 +76,7 @@ export class Simu {
         code: 200,
 
         type: 0,
-        msg: "执行中",
+        msg: `正在执行第${this.count + 1}个任务`,
         data: {
           count: this.count,
         },
@@ -113,8 +110,15 @@ export class Simu {
 
   over = () => {
     console.log(`结束子进程`);
-    this.child.kill();
+
     this.count = 0;
     this.isStart = false;
+
+    if (this.child) {
+      this.child.send({
+        type: "stop",
+      });
+      this.child.kill();
+    }
   };
 }
