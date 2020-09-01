@@ -322,6 +322,8 @@ export class SimuLibs {
         await newPage.waitForSelector(".c-showurl");
         console.log(`点击前往目标页面：：：：${sourceHashLink}`);
         await newPage.click(`a[href="${sourceHashLink}"]`);
+        console.log(`跳出遍历百度结果页`);
+        break;
       } else {
         console.log(`开始滚动到百度页面底部`);
         await this.browser.autoScroll(newPage);

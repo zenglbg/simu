@@ -1,8 +1,8 @@
 {
-  "name": "my-app",
+  "name": "simu-app",
   "version": "0.1.1",
   "author": "Your Name",
-  "description": "React-TypeScript-Electron sample with Create React App and Electron Builder",
+  "description": "use electron puppetter simu action",
   "homepage": ".",
   "main": "build/electron/main.js",
   "private": true,

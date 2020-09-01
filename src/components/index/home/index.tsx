@@ -18,8 +18,8 @@ interface DataInter {
 export const HomePage = (props: Props) => {
   const [isJs, setIsJs] = useState(true);
   const [debug, setDebug] = useState(true);
-  const [source, setSource] = useState("www.cn-hdfh.com/");
-  const [order, setOrder] = useState("909894887329961");
+  const [source, setSource] = useState("");
+  const [order, setOrder] = useState("");
   const [loop, setLoop] = useState(10);
   const [ips, setIps] = useState(3);
 
