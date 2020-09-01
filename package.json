@@ -1,0 +1,71 @@
+{
+  "name": "my-app",
+  "version": "0.1.1",
+  "author": "Your Name",
+  "description": "React-TypeScript-Electron sample with Create React App and Electron Builder",
+  "homepage": ".",
+  "main": "build/electron/main.js",
+  "private": true,
+  "dependencies": {
+    "antd": "^4.6.2",
+    "axios": "^0.20.0",
+    "electron-devtools-installer": "^3.1.1",
+    "electron-is-dev": "^1.2.0",
+    "electron-reload": "^1.5.0",
+    "electron-window-state": "^5.0.3",
+    "node-sass": "^4.14.1",
+    "puppeteer": "^5.2.1",
+    "puppeteer-page-proxy": "^1.2.8",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-scripts": "3.4.3",
+    "rxjs": "^6.6.2",
+    "typescript": "3.9.7"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "postinstall": "electron-builder install-app-deps",
+    "electron:dev": "concurrently \"BROWSER=none yarn start\" \"wait-on http://localhost:3000 && tsc -p electron -w\" \"wait-on http://localhost:3000 && tsc -p electron && electron .\"",
+    "electron:windev": "concurrently \"SET BROWSER=none && yarn start\" \"wait-on http://localhost:3000 && tsc -p electron -w\" \"wait-on http://localhost:3000 && tsc -p electron && electron .\"",
+    "electron:build": "yarn build && tsc -p electron && electron-builder",
+    "electron:build:exe": "yarn build && tsc -p electron && electron-builder --win --x64",
+    "eject": "react-scripts eject"
+  },
+  "build": {
+    "extends": null,
+    "files": [
+      "build/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    }
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@types/electron-devtools-installer": "^2.2.0",
+    "@types/jest": "26.0.9",
+    "@types/node": "14.0.27",
+    "@types/react": "16.9.46",
+    "@types/react-dom": "16.9.8",
+    "concurrently": "^5.3.0",
+    "electron": "^9.2.0",
+    "electron-builder": "^22.8.0",
+    "wait-on": "^5.2.0"
+  }
+}
