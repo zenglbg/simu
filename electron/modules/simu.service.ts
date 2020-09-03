@@ -21,7 +21,7 @@ export class SimuService {
   body: InfoBody;
   count = 0; // 执行进度，0为第一个任务
   isStart = false;
-  allowed = true; // @todo 待删除功能
+  message = "开始执行";
 
   constructor() {
     // this.body = body;
@@ -87,10 +87,15 @@ export class SimuService {
       this.child = fork(path.resolve(__dirname, "../libs/simuLibs.js"));
       this.child.on("message", (msg) => {
         console.log("Message from child", msg);
-        if (this.count > this.body.ips) {
+        if (msg.counter) {
+          if (this.count > this.body.ips) {
+            this.over();
+          }
+          this.count++;
+        } else if (msg.msg) {
           this.over();
+          this.message = msg.msg;
         }
-        this.count++;
       });
       this.child.send({
         type: "start",
@@ -100,7 +105,7 @@ export class SimuService {
       return {
         code: 200,
         type: 1,
-        msg: "开始执行",
+        msg: this.message,
         data: {
           count: this.count,
         },
@@ -119,6 +124,7 @@ export class SimuService {
         type: "stop",
       });
       this.child.kill();
+      this.child = null;
     }
   };
 }

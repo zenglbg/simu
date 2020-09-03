@@ -121,7 +121,7 @@ export class MyBrowser {
 
     const { width, height } = await page.viewport();
     // await (async function moveClick(loopTime) {
-    for await (const loopTime of arrRange(10)) {
+    for (const loopTime of arrRange(5)) {
       console.log(`第${loopTime} 随机移动点击`);
       await page.waitFor(2 * 1000);
 
@@ -135,7 +135,7 @@ export class MyBrowser {
       await page.mouse.click(x, y);
       await page.waitFor(2 * 1000);
     }
-
+    console.log(`完成随机移动点击`);
     // })(10);
   }
 
@@ -145,30 +145,47 @@ export class MyBrowser {
      */
     console.log(`随机进入内页功能,等待5秒渲染时间`);
     await page.waitFor(5 * 1000);
-    console.log(`获取所有内页`);
-    const childrenPages = await page.$$(`a[href]`);
-    console.log(`随机点击所有内页中的一个`);
-    await childrenPages[rdmMaxFloor(childrenPages.length)].click();
+    console.log(`获取所有内页长度`);
+    const href = await page.evaluate(() => {
+      const alist = document.querySelectorAll(`a[href]`);
+      const len = alist.length;
+      const key = Math.floor(Math.random() * len + 1);
+      const href = alist[key].getAttribute("href");
+      window.location.href = href;
+      return href;
+    }, null);
+    console.log(`随机点击所有内页中的一个---a[href="${href}"]`);
+    /**
+     * 不是正在展示的页面不能进行点击事件
+     */
+
+    // await page.click(`a[href="${href}"]`);
+    // await page.$(`a[href="${href}"]`).click();
+    console.log(`随机进入内页功能,等待5秒渲染时间`);
+    await page.waitFor(5 * 1000);
   }
 
   async rdmNewPage(page: Page): Promise<Page> {
     /**
-     * 随机进入内页功能
+     * 随机进入新的内页功能
      */
     console.log(`随机进入内页功能`);
     await page.waitFor(3 * 1000);
 
-    console.log(`获取所有内页`);
-    const childrenPages = await page.$$(`a[href]`);
-    console.log(`随机点击所有内页中的一个`, childrenPages);
-    const link = await page.evaluate(
-      (el) => el.getAttribute("href"),
-      childrenPages[rdmMaxFloor(childrenPages.length)]
-    );
+    console.log(`随机点击所有内页中的一个`);
+    const link = await page.evaluate((el) => {
+      const alist = document.querySelectorAll(`a[href]`);
+      const len = alist.length;
+      const key = Math.floor(Math.random() * len + 1);
+      return alist[key].getAttribute("href");
+    }, null);
+    console.log(`打开一个新页面`);
     const newPage = await this.browser.newPage();
+    console.log(`开始情网href====》 ${link}`);
     await newPage.goto(link);
     console.log(`打开新页面等待5秒的渲染时间`);
     await this.waitS(newPage, 5);
+    console.log(`返回新的页面`);
     return newPage;
   }
 

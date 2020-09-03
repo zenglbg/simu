@@ -18,8 +18,8 @@ interface DataInter {
 export const HomePage = (props: Props) => {
   const [isJs, setIsJs] = useState(true);
   const [debug, setDebug] = useState(true);
-  const [source, setSource] = useState("");
-  const [order, setOrder] = useState("");
+  const [source, setSource] = useState("ucheke.jrj.com.cn/");
+  const [order, setOrder] = useState("909894887329961");
   const [loop, setLoop] = useState(10);
   const [ips, setIps] = useState(3);
 
@@ -149,8 +149,9 @@ export const HomePage = (props: Props) => {
             <Radio value={true}>true</Radio>
           </Radio.Group>
         </Form.Item>
-
         <Form.Item>
+          <p>点击开始执行，可以获取当前程序运行状态</p>
+
           <Button htmlType="submit" className="btn-start" type="primary">
             开始执行
           </Button>
